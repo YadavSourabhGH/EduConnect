@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quiz Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        select, input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        th input[type="checkbox"] {
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .loading.active {
+            display: flex;
+        }
+        .btn-primary {
+            background: #2196F3;
+            padding: 12px 24px;
+            font-size: 16px;
+        }
+        .table-container {
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .card {
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .loading-spinner {
+            width: 3rem;
+            height: 3rem;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-dark bg-primary">
+        <div class="container" style="justify-content: center;">
+            <span class="navbar-brand mb-0 h1" style="color: black;font-weight: bolder;font-size: x-large;">Quiz Dashboard</span>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Quiz Settings</h5>
+                        <div class="mb-3">
+                            <label class="form-label">Subject</label>
+                            <select id="subject" class="form-select">
+                                <option value="JavaScript">JavaScript</option>
+                                <option value="Python">Python</option>
+                                <option value="Java">Java</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Difficulty</label>
+                            <select id="difficulty" class="form-select">
+                                <option value="easy">Easy</option>
+                                <option value="medium">Medium</option>
+                                <option value="hard">Hard</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Number of Questions</label>
+                            <input type="number" id="numQuestions" class="form-control" min="1" max="10" value="5">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Students List</h5>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>
+                                            <div class="form-check">
+                                                <input type="checkbox" id="selectAll" class="form-check-input" onclick="toggleAll()">
+                                                <label class="form-check-label">Select All</label>
+                                            </div>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="studentList">
+                                    <!-- Sample students -->
+                                    <tr>
+                                        <td>Sourabh Yadav</td>
+                                        <td>sourabhyadav79777@gmail.com</td>
+                                        <td><input type="checkbox" class="student-select"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Vinayak Singh</td>
+                                        <td>singhvinayak110@gmail.com</td>
+                                        <td><input type="checkbox" class="student-select"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <button onclick="sendQuizzes()" class="btn btn-primary">Send Quizzes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner-border text-light loading-spinner"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const BASE_URL = window.location.origin;
+        
+        function toggleAll() {
+            const selectAllCheckbox = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.student-select');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+        }
+
+        function showLoading() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+        async function sendQuizzes() {
+            showLoading();
+            const subject = document.getElementById('subject').value;
+            const difficulty = document.getElementById('difficulty').value;
+            const numQuestions = document.getElementById('numQuestions').value;
+            
+            // Get selected students
+            const selectedStudents = [];
+            document.querySelectorAll('.student-select:checked').forEach(checkbox => {
+                const row = checkbox.closest('tr');
+                selectedStudents.push({
+                    name: row.cells[0].textContent,
+                    email: row.cells[1].textContent
+                });
+            });
+
+            try {
+                // Generate questions
+                const questionsResponse = await fetch(`${BASE_URL}/generate-questions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ subject, difficulty, numQuestions })
+                });
+                
+                const questionsData = await questionsResponse.json();
+                const quizUrl = `${BASE_URL}/quiz?qs=${questionsData.uniqueCode}`;
+
+                // Send emails to selected students using our API
+                for(const student of selectedStudents) {
+                    await fetch(`${BASE_URL}/send-quiz-email`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            to: student.email,
+                            subject: `Quiz: ${subject} - ${difficulty} level`,
+                            html: `
+                                <!DOCTYPE html>
+                                <html>
+                                <head>
+                                    <style>
+                                        body { font-family: Arial, sans-serif; line-height: 1.6; }
+                                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                                        .header { background: #2196F3; color: white; padding: 20px; border-radius: 8px; }
+                                        .content { padding: 20px; background: #f8f9fa; border-radius: 8px; margin: 20px 0; }
+                                        .button { display: inline-block; padding: 12px 24px; background: #2196F3; color: white; 
+                                                 text-decoration: none; border-radius: 4px; margin: 20px 0; font-weight: bold; align-self: center; }
+                                        .footer { color: #666; font-size: 14px; margin-top: 20px; }
+                                    </style>
+                                </head>
+                                <body>
+                                    <div class="container">
+                                        <div class="header">
+                                            <h2>Hello ${student.name},</h2>
+                                        </div>
+                                        <div class="content">
+                                            <p>You have been assigned a quiz with the following details:</p>
+                                            <ul>
+                                                <li>Subject: ${subject}</li>
+                                                <li>Difficulty: ${difficulty}</li>
+                                                <li>Number of Questions: ${numQuestions}</li>
+                                            </ul>
+                                            <a href="${quizUrl}" class="button">Start Quiz</a>
+                                            <p><strong>Note:</strong> Please complete the quiz in one session.</p>
+                                        </div>
+                                        <div class="footer">
+                                            <p>Best regards,<br>University Quiz System</p>
+                                        </div>
+                                    </div>
+                                </body>
+                                </html>
+                            `
+                        })
+                    });
+                }
+
+                alert('Quizzes sent successfully!');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again later.');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function showElement(id) {
+            document.getElementById(id).classList.remove('d-none');
+        }
+
+        function hideElement(id) {
+            document.getElementById(id).classList.add('d-none');
+        }
+
+        async function startQuiz() {
+            if (!validateForm()) return;
+            hideElement('userInfo');
+            showElement('quizContainer');
+            await loadQuestion();
+        }
+
+        function validateForm() {
+            const name = document.getElementById('fullName').value;
+            const roll = document.getElementById('rollNo').value;
+            if (!name || !roll) {
+                alert('Please fill in all fields');
+                return false;
+            }
+            return true;
+        }
+    </script>
+</body>
+</html>

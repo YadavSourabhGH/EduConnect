@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EduConnect - Hackathon Edition</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* General Reset */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    :root {
+      --primary-gradient: linear-gradient(135deg, #6e8efb, #4facfe);
+      --secondary-gradient: linear-gradient(135deg, #ff9a9e, #fad0c4);
+      --glass-bg: rgba(255, 255, 255, 0.95);
+      --glass-bg-dark: rgba(18, 18, 18, 0.95);
+      --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 8px 15px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 15px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    body {
+      background: var(--secondary-gradient);
+      font-family: 'Poppins', sans-serif;
+      transition: all 0.5s ease;
+    }
+
+    /* Dark Mode */
+    .dark-mode {
+      background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+      color: #f1f1f1;
+    }
+
+    .dark-mode .chart-container,
+    .dark-mode .subject {
+      background: var(--glass-bg-dark);
+      backdrop-filter: blur(10px);
+    }
+
+    /* Light Mode */
+    .light-mode {
+      background: #ffffff;
+      color: #333333;
+    }
+
+    /* Header Section */
+    header {
+      background: var(--primary-gradient);
+      padding: 60px 10% 120px;
+      position: relative;
+      clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
+    }
+    header h1 {
+      font-size: 3.5rem;
+      font-weight: 800;
+      text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
+      letter-spacing: -1px;
+      margin-bottom: 20px;
+      animation: fadeInUp 1s ease;
+    }
+    header p {
+      font-size: 1.4rem;
+      font-weight: 300;
+      margin-bottom: 35px;
+      animation: fadeInUp 1s ease 0.2s;
+      opacity: 0;
+      animation-fill-mode: forwards;
+    }
+    header button {
+      padding: 15px 40px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      background: var(--glass-bg);
+      color: #4facfe;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: var(--shadow-md);
+      backdrop-filter: blur(10px);
+      animation: fadeInUp 1s ease 0.4s;
+      opacity: 0;
+      animation-fill-mode: forwards;
+    }
+    header button:hover {
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: var(--shadow-lg);
+      background: #4facfe;
+      color: white;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Dashboard Section */
+    .dashboard {
+      margin: -60px 10% 0;
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      box-shadow: var(--shadow-lg);
+      padding: 40px;
+    }
+
+    /* Graph Section */
+    .chart-container {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      box-shadow: var(--shadow-md);
+      padding: 20px;
+      margin: 20px auto;
+      max-width: 600px;  /* Add max-width */
+      height: 300px;    /* Reduce height */
+    }
+
+    .chart-container canvas {
+      width: 100%;
+      height: 100%;
+      max-height: 250px; /* Control max height */
+    }
+
+    /* Subject Cards */
+    .subjects {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 30px;
+      margin-top: 40px;
+    }
+    .subject {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: var(--shadow-md);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      text-align: center;
+    }
+
+    /* New Subject Colors */
+    .python {
+      background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+    }
+    .java {
+      background: linear-gradient(135deg, #f39c12, #ffbe76);
+    }
+    .ml {
+      background: linear-gradient(135deg, #8e44ad, #a55eea);
+    }
+
+    .subject:hover {
+      transform: translateY(-10px);
+      box-shadow: var(--shadow-lg);
+      border-color: rgba(79, 172, 254, 0.4);
+    }
+    .subject img {
+      width: 80px;
+      margin-bottom: 10px;
+    }
+    .subject h3 {
+      font-size: 1.1rem;
+      margin: 10px 0;
+    }
+    .subject p {
+      font-size: 0.9rem;
+    }
+
+    /* Quiz Section */
+    .quiz {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      box-shadow: var(--shadow-md);
+      margin: 40px 10%;
+      padding: 40px;
+      text-align: center;
+    }
+    .quiz h2 {
+      font-size: 2rem;
+      margin-bottom: 15px;
+    }
+    .quiz button {
+      background: var(--primary-gradient);
+      box-shadow: var(--shadow-md);
+      padding: 15px 30px;
+      color: white;
+      border: none;
+      border-radius: 30px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .quiz button:hover {
+      background: #007bff;
+    }
+
+    /* Theme Toggle Button */
+    .theme-toggle-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: var(--primary-gradient);
+      backdrop-filter: blur(10px);
+      border-radius: 30px;
+      box-shadow: var(--shadow-md);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 10px 20px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .theme-toggle-btn:hover {
+      background: #007bff;
+    }
+
+  </style>
+</head>
+<body class="dark-mode">
+  <header>
+    <h1>EduConnect</h1>
+    <p>Your Personalized Learning Dashboard</p>
+    <button onclick="toggleChatbot()">Chat with EduBot</button>
+  </header>
+
+  <!-- Theme Toggle Button -->
+  <button class="theme-toggle-btn" onclick="toggleTheme()">Switch to Light Mode</button>
+
+  <!-- Dashboard Section -->
+  <section class="dashboard">
+    <h2>Student Dashboard</h2>
+    
+    <!-- Graph Section -->
+    <div class="chart-container">
+      <canvas id="subjectChart"></canvas>
+    </div>
+
+    <!-- Subject Cards -->
+    <div class="subjects">
+      <div class="subject python">
+        <img src="https://img.icons8.com/ios/100/000000/python.png" alt="Python">
+        <h3>Python</h3>
+        <p>Learn programming with Python basics and advanced topics.</p>
+      </div>
+      <div class="subject java">
+        <img src="java2.png" alt="Java">
+        <h3>Java</h3>
+        <p>Dive into object-oriented programming and develop apps in Java.</p>
+      </div>
+      <div class="subject ml">
+        <img src="https://img.icons8.com/ios/100/000000/machine-learning.png" alt="Machine Learning">
+        <h3>Machine Learning</h3>
+        <p>Explore ML concepts, models, and algorithms for real-world applications.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quiz Section -->
+  <section class="quiz">
+    <h2>Daily Quiz</h2>
+    <p>Test your knowledge with daily quizzes!</p>
+    <button onclick="startQuiz()">Start Quiz</button>
+  </section>
+
+  <script>
+    // Graph Data
+    const ctx = document.getElementById('subjectChart').getContext('2d');
+    const subjectChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Python', 'Java', 'Machine Learning'],
+        datasets: [{
+          label: 'Progress (%)',
+          data: [80, 70, 60],  // You can update this data dynamically
+          backgroundColor: '#4facfe',
+          borderColor: '#00f2fe',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 2,     // Width:Height ratio
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100        // Set max value
+          }
+        }
+      }
+    });
+
+    // Placeholder functions for chatbot and quiz
+    function toggleChatbot() {
+      alert('Chatbot functionality will be added soon!');
+    }
+
+    function startQuiz() {
+      alert('Quiz functionality will be added soon!');
+    }
+
+    // Toggle between Dark Mode and Light Mode
+    function toggleTheme() {
+      const body = document.body;
+      const themeButton = document.querySelector('.theme-toggle-btn');
+      body.classList.toggle('dark-mode');
+      body.classList.toggle('light-mode');
+
+      if (body.classList.contains('dark-mode')) {
+        themeButton.textContent = 'Switch to Light Mode';
+      } else {
+        themeButton.textContent = 'Switch to Dark Mode';
+      }
+    }
+
+
+  </script>
+</body>
+</html>

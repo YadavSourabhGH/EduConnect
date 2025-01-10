@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Quiz</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2196F3;
+            --hover-color: #1976D2;
+        }
+        body {
+            background-color: #f8f9fa;
+        }
+        .navbar {
+            background-color: var(--primary-color) !important;
+        }
+        .container {
+            max-width: 800px;
+            margin-top: 2rem;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        .question-card {
+            padding: 2rem;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        .option-label {
+            display: block;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .option-label:hover {
+            background-color: #e3f2fd;
+            border-color: var(--primary-color);
+        }
+        .option-input:checked + .option-label {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        .btn-primary {
+            background-color: var(--primary-color);
+            border: none;
+            padding: 0.8rem 2rem;
+            font-size: 1.1rem;
+        }
+        .btn-primary:hover {
+            background-color: var(--hover-color);
+        }
+        .progress {
+            height: 0.5rem;
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark">
+        <div class="container">
+            <span class="navbar-brand mb-0 h1">Student Quiz Portal</span>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div id="userInfo" class="card">
+            <div class="card-body">
+                <h3 class="card-title mb-4">Student Information</h3>
+                <div class="mb-3">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" id="fullName" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Roll Number</label>
+                    <input type="text" id="rollNo" class="form-control" required>
+                </div>
+                <button onclick="startQuiz()" class="btn btn-primary w-100">Start Quiz</button>
+            </div>
+        </div>
+
+        <div id="quizContainer" class="d-none">
+            <div class="progress">
+                <div id="progressBar" class="progress-bar bg-primary" role="progressbar"></div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <div id="questionContainer" class="question-card"></div>
+                    <button onclick="submitAnswer()" class="btn btn-primary w-100">Next Question</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="resultContainer" class="card d-none">
+            <div class="card-body text-center">
+                <h3 class="card-title mb-4">Quiz Completed!</h3>
+                <div class="alert alert-success">
+                    <p class="mb-0">Your responses have been recorded successfully.</p>
+                </div>
+                <p class="text-muted">Thank you for completing the quiz!</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const BASE_URL = window.location.origin;
+        let currentQuestion = 1;
+        let uniqueCode = new URLSearchParams(window.location.search).get('qs');
+        let results = [];
+        let studentInfo = {};
+
+        async function startQuiz() {
+            studentInfo.fullName = document.getElementById('fullName').value;
+            studentInfo.rollNo = document.getElementById('rollNo').value;
+
+            if (!studentInfo.fullName || !studentInfo.rollNo) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            document.getElementById('userInfo').classList.add('d-none');
+            document.getElementById('quizContainer').classList.remove('d-none');
+            loadQuestion();
+        }
+
+        async function loadQuestion() {
+            try {
+                const response = await fetch(`${BASE_URL}/get-question?uniqueCode=${uniqueCode}&questionNumber=${currentQuestion}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    endQuiz();
+                    return;
+                }
+
+                const container = document.getElementById('questionContainer');
+                container.innerHTML = `
+                    <h3>Question ${currentQuestion}</h3>
+                    <p>${data.question}</p>
+                    <div class="options">
+                        ${data.options.map((option, index) => `
+                            <label class="option-label">
+                                <input type="radio" name="answer" value="${option}" class="option-input">
+                                ${option}
+                            </label>
+                        `).join('')}
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function submitAnswer() {
+            const selected = document.querySelector('input[name="answer"]:checked');
+            if (!selected) {
+                alert('Please select an answer');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${BASE_URL}/verify-answer`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        uniqueCode,
+                        questionNumber: currentQuestion,
+                        answer: selected.value
+                    })
+                });
+
+                const data = await response.json();
+                results.push({
+                    questionText: data.question,
+                    userAnswer: selected.value,
+                    correctAnswer: data.correctAnswer,
+                    isCorrect: data.isCorrect
+                });
+
+                currentQuestion++;
+                const nextQuestion = await fetch(`${BASE_URL}/get-question?uniqueCode=${uniqueCode}&questionNumber=${currentQuestion}`);
+                
+                if (nextQuestion.ok) {
+                    loadQuestion();
+                } else {
+                    endQuiz();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function endQuiz() {
+            document.getElementById('quizContainer').classList.add('d-none');
+            document.getElementById('resultContainer').classList.remove('d-none');
+
+            try {
+                await fetch(`${BASE_URL}/save-results`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        uniqueCode,
+                        studentInfo,
+                        results
+                    })
+                });
+            } catch (error) {
+                console.error('Error saving results:', error);
+            }
+        }
+    </script>
+</body>
+</html>
